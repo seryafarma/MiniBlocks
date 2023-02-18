@@ -52,6 +52,8 @@ bool anon_sign_up = false;
 
 MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
+String things_to_show = "";
+
 //---------------------------------------------------------------------------------------------------------------------
 // Functions Declaration
 //---------------------------------------------------------------------------------------------------------------------
@@ -80,6 +82,41 @@ void connect_firebase()
 
     Firebase.begin(&config, &auth);
     Firebase.reconnectWiFi(true);
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+void process_firebase(textEffect_t& text_effect)
+{
+    if (Firebase.ready())
+    {
+        if (Firebase.RTDB.getString(&fbdo, "/test/display/one"))
+        {
+            things_to_show = fbdo.stringData();
+            Serial.println(things_to_show);
+        }
+        else
+        {
+            Serial.println(fbdo.errorReason());
+        }
+
+        if (Firebase.RTDB.getString(&fbdo, "/test/display/animate"))
+        {
+            String on = fbdo.stringData();
+            if (on == "true")
+            {
+                text_effect = PA_SCROLL_LEFT;
+            }
+            else
+            {
+                text_effect = PA_PRINT;
+            }
+            Serial.println(things_to_show);
+        }
+        else
+        {
+            Serial.println(fbdo.errorReason());
+        }
+    }
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -119,8 +156,6 @@ void setup()
     P.setCharSpacing(2);
 }
 
-String things_to_show = "";
-
 //---------------------------------------------------------------------------------------------------------------------
 void loop()
 {
@@ -132,37 +167,7 @@ void loop()
     if (P.displayAnimate())
     {
         // Done displaying, let's check firebase.
-        if (Firebase.ready())
-        {
-            if (Firebase.RTDB.getString(&fbdo, "/test/display/one"))
-            {
-                things_to_show = fbdo.stringData();
-                Serial.println(things_to_show);
-            }
-            else
-            {
-                Serial.println(fbdo.errorReason());
-            }
-
-            if (Firebase.RTDB.getString(&fbdo, "/test/display/animate"))
-            {
-                String on = fbdo.stringData();
-                if (on == "true")
-                {
-                    text_effect = PA_SCROLL_LEFT;
-                }
-                else
-                {
-                    text_effect = PA_PRINT;
-                }
-                Serial.println(things_to_show);
-            }
-            else
-            {
-                Serial.println(fbdo.errorReason());
-            }
-        }
-
+        process_firebase(text_effect);
         // Nothing pending, redraw.
         P.displayText(things_to_show.c_str(), PA_LEFT, 50, 50, text_effect);
     }
