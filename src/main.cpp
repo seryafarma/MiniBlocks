@@ -34,8 +34,7 @@
 #define DATA_PIN       7
 #define CS_PIN         15
 #define STATE_DELAY_MS 50
-
-#define DHT11_PIN 16
+#define DHT11_PIN      D0
 
 //---------------------------------------------------------------------------------------------------------------------
 // Class
