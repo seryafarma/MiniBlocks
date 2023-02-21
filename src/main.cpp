@@ -170,5 +170,5 @@ void loop()
         // Nothing pending, redraw.
         P.displayText(things_to_show.c_str(), PA_LEFT, 50, 50, text_effect);
     }
-    delay(STATE_DELAY_MS * 10);
+    delay(STATE_DELAY_MS * 5);
 }
