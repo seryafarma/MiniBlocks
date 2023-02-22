@@ -160,7 +160,7 @@ void loop()
         // Done displaying, let's check firebase.
         process_firebase(text_effect);
         // Nothing pending, redraw.
-        P.displayText(things_to_show.c_str(), PA_LEFT, 50, 50, text_effect);
+        P.displayText(things_to_show.c_str(), PA_LEFT, 50, 50, text_effect, PA_DISSOLVE);
     }
     delay(STATE_DELAY_MS * 5);
 }
