@@ -47,7 +47,6 @@ DFRobot_DHT11 DHT;
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
-bool anon_sign_up = false;
 
 MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
@@ -66,16 +65,12 @@ void connect_firebase()
 {
     config.api_key = Authentication::FB_WEB_API_KEY;
     config.database_url = Authentication::FB_RTDB_URL;
-    // Anonymous access, sign up everytime.
-    if (Firebase.signUp(&config, &auth, "", ""))
-    {
-        Serial.println("ok");
-        anon_sign_up = true;
-    }
-    else
-    {
-        Serial.printf("%s\n", config.signer.signupError.message.c_str());
-    }
+
+    auth.user.email = Authentication::FB_EMAIL;
+    auth.user.password = Authentication::FB_PASS;
+
+    // Sign in.
+    Firebase.begin(&config, &auth);
 
     config.token_status_callback = tokenStatusCallback;
 
@@ -159,10 +154,7 @@ void setup()
 void loop()
 {
     static textEffect_t text_effect = PA_PRINT;
-    if (!anon_sign_up)
-    {
-        return;
-    }
+
     if (P.displayAnimate())
     {
         // Done displaying, let's check firebase.
