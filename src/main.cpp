@@ -115,16 +115,7 @@ void firebase_stream_cb(FirebaseStream data)
         }
         else if (path.indexOf("animate") > 0)
         {
-            Serial.println("Inside here");
-            Serial.println(new_data.length());
-            if (new_data == "true")
-            {
-                animate = true;
-            }
-            else
-            {
-                animate = false;
-            }
+            animate = (new_data == "true");
         }
     }
 
@@ -148,14 +139,7 @@ void firebase_stream_cb(FirebaseStream data)
             }
             else if (name == "animate")
             {
-                if (value.value.indexOf("true") > 0)
-                {
-                    animate = true;
-                }
-                else
-                {
-                    animate = false;
-                }
+                animate = (value.value.indexOf("true") > 0);
             }
 
             Serial.printf("Name: %s, Value: %s, Type: %s\n", value.key.c_str(), value.value.c_str(),
@@ -202,41 +186,6 @@ void connect_firebase()
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-void process_firebase(textEffect_t& text_effect)
-{
-    if (Firebase.ready())
-    {
-        if (Firebase.RTDB.getString(&fbdo, "/test/display/one"))
-        {
-            things_to_show = fbdo.stringData();
-            Serial.println(things_to_show);
-        }
-        else
-        {
-            Serial.println(fbdo.errorReason());
-        }
-
-        if (Firebase.RTDB.getString(&fbdo, "/test/display/animate"))
-        {
-            String on = fbdo.stringData();
-            if (on == "true")
-            {
-                text_effect = PA_SCROLL_LEFT;
-            }
-            else
-            {
-                text_effect = PA_PRINT;
-            }
-            Serial.println(things_to_show);
-        }
-        else
-        {
-            Serial.println(fbdo.errorReason());
-        }
-    }
-}
-
-//---------------------------------------------------------------------------------------------------------------------
 void connect_wifi()
 {
     WiFi.begin(Authentication::WIFI_SSID, Authentication::WIFI_PASSWORD);
@@ -276,16 +225,6 @@ void setup()
 //---------------------------------------------------------------------------------------------------------------------
 void loop()
 {
-
-    // if (P.displayAnimate())
-    // {
-    //     // Done displaying, let's check firebase.
-    //     process_firebase(text_effect);
-    //     // Nothing pending, redraw.
-    //     P.displayText(things_to_show.c_str(), PA_LEFT, 50, 50, text_effect, PA_DISSOLVE);
-    // }
-    // delay(STATE_DELAY_MS * 5);
-
     if (P.displayAnimate())
     {
         // store things_to_show...
