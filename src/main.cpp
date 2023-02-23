@@ -73,6 +73,7 @@ void connect_firebase()
     Firebase.begin(&config, &auth);
 
     config.token_status_callback = tokenStatusCallback;
+    config.max_token_generation_retry = 5;
 
     Firebase.begin(&config, &auth);
     Firebase.reconnectWiFi(true);
