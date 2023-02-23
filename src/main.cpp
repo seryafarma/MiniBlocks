@@ -240,7 +240,7 @@ void loop()
         // add a small delay if not animated.
         if (!animate)
         {
-            delay(500);
+            delay(800);
         }
     }
     delay(STATE_DELAY_MS * 5);
