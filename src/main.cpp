@@ -89,18 +89,6 @@ void firebase_stream_cb(FirebaseStream data)
     // Get the path that triggered the function
     String path = String(data.dataPath());
 
-    // // if the data returned is an integer, there was a change on the GPIO state on the following path /{gpio_number}
-    // if (data.dataTypeEnum() == fb_esp_rtdb_data_type_integer)
-    // {
-    //     String gpio = path.substring(1);
-    //     int state = data.intData();
-    //     Serial.print("GPIO: ");
-    //     Serial.println(gpio);
-    //     Serial.print("STATE: ");
-    //     Serial.println(state);
-    //     digitalWrite(gpio.toInt(), state);
-    // }
-
     if (data.dataTypeEnum() == fb_esp_rtdb_data_type_string)
     {
         Serial.println("New string data");
@@ -119,8 +107,7 @@ void firebase_stream_cb(FirebaseStream data)
         }
     }
 
-    /* When it first runs, it is triggered on the root (/) path and returns a JSON with all keys
-    and values of that path. So, we can get all values from the database and updated the GPIO states*/
+    // First run it will get the tree.
     if (data.dataTypeEnum() == fb_esp_rtdb_data_type_json)
     {
         FirebaseJson json = data.to<FirebaseJson>();
