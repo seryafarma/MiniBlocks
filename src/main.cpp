@@ -83,7 +83,7 @@ void firebase_stream_cb(FirebaseStream data)
 {
     Serial.printf("stream path, %s\nevent path, %s\ndata type, %s\nevent type, %s\n\n", data.streamPath().c_str(),
                   data.dataPath().c_str(), data.dataType().c_str(), data.eventType().c_str());
-    printResult(data); 
+    printResult(data);
     Serial.println();
 
     // Get the path that triggered the function
@@ -100,6 +100,33 @@ void firebase_stream_cb(FirebaseStream data)
     //     Serial.println(state);
     //     digitalWrite(gpio.toInt(), state);
     // }
+
+    if (data.dataTypeEnum() == fb_esp_rtdb_data_type_string)
+    {
+        Serial.println("New string data");
+        String new_data = data.to<String>();
+        Serial.println(new_data);
+        Serial.println("path");
+        Serial.println(path.c_str());
+
+        if (path.indexOf("value") > 0)
+        {
+            things_to_show = new_data;
+        }
+        else if (path.indexOf("animate") > 0)
+        {
+            Serial.println("Inside here");
+            Serial.println(new_data.length());
+            if (new_data == "true")
+            {
+                animate = true;
+            }
+            else
+            {
+                animate = false;
+            }
+        }
+    }
 
     /* When it first runs, it is triggered on the root (/) path and returns a JSON with all keys
     and values of that path. So, we can get all values from the database and updated the GPIO states*/
@@ -121,7 +148,7 @@ void firebase_stream_cb(FirebaseStream data)
             }
             else if (name == "animate")
             {
-                if (strcmp(value.value.c_str(), "true"))
+                if (value.value.indexOf("true") > 0)
                 {
                     animate = true;
                 }
@@ -261,18 +288,13 @@ void loop()
 
     if (P.displayAnimate())
     {
+        // store things_to_show...
         if (Firebase.isTokenExpired())
         {
             Firebase.refreshToken(&config);
             Serial.println("Refresh token");
         }
         textEffect_t text_effect = animate ? PA_SCROLL_LEFT : PA_PRINT;
-
-        Serial.println(things_to_show);
-        Serial.println("Things");
-        Serial.println(animate);
-        Serial.println("Animate");
-
         // Nothing pending, redraw.
         P.displayText(things_to_show.c_str(), PA_LEFT, 50, 50, text_effect, PA_DISSOLVE);
 
