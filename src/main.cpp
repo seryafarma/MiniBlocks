@@ -51,6 +51,11 @@ FirebaseConfig config;
 MD_Parola P = MD_Parola(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
 
 String things_to_show = "";
+bool animate = false;
+
+#define PATH_TO_CHECK  "miniblock/display/" // animate and value.
+#define PATH_ANIMATION "animate"
+#define PATH_NUMBER    "value"
 
 //---------------------------------------------------------------------------------------------------------------------
 // Functions Declaration
@@ -59,6 +64,87 @@ String things_to_show = "";
 //---------------------------------------------------------------------------------------------------------------------
 // Setup and Loop
 //---------------------------------------------------------------------------------------------------------------------
+
+//---------------------------------------------------------------------------------------------------------------------
+void firebase_timeout(bool timeout)
+{
+    if (timeout)
+    {
+        Serial.println("stream timeout, resuming...\n");
+    }
+    else if (!fbdo.httpConnected())
+    {
+        Serial.printf("Error code: %d, reason: %s\n\n", fbdo.httpCode(), fbdo.errorReason().c_str());
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
+void firebase_stream_cb(FirebaseStream data)
+{
+    Serial.printf("stream path, %s\nevent path, %s\ndata type, %s\nevent type, %s\n\n", data.streamPath().c_str(),
+                  data.dataPath().c_str(), data.dataType().c_str(), data.eventType().c_str());
+    printResult(data); 
+    Serial.println();
+
+    // Get the path that triggered the function
+    String path = String(data.dataPath());
+
+    // // if the data returned is an integer, there was a change on the GPIO state on the following path /{gpio_number}
+    // if (data.dataTypeEnum() == fb_esp_rtdb_data_type_integer)
+    // {
+    //     String gpio = path.substring(1);
+    //     int state = data.intData();
+    //     Serial.print("GPIO: ");
+    //     Serial.println(gpio);
+    //     Serial.print("STATE: ");
+    //     Serial.println(state);
+    //     digitalWrite(gpio.toInt(), state);
+    // }
+
+    /* When it first runs, it is triggered on the root (/) path and returns a JSON with all keys
+    and values of that path. So, we can get all values from the database and updated the GPIO states*/
+    if (data.dataTypeEnum() == fb_esp_rtdb_data_type_json)
+    {
+        FirebaseJson json = data.to<FirebaseJson>();
+
+        // To iterate all values in Json object
+        size_t count = json.iteratorBegin();
+        Serial.println("\n---------");
+        for (size_t i = 0; i < count; i++)
+        {
+            FirebaseJson::IteratorValue value = json.valueAt(i);
+
+            String name = value.key.c_str();
+            if (name == "value")
+            {
+                things_to_show = value.value;
+            }
+            else if (name == "animate")
+            {
+                if (strcmp(value.value.c_str(), "true"))
+                {
+                    animate = true;
+                }
+                else
+                {
+                    animate = false;
+                }
+            }
+
+            Serial.printf("Name: %s, Value: %s, Type: %s\n", value.key.c_str(), value.value.c_str(),
+                          value.type == FirebaseJson::JSON_OBJECT ? "object" : "array");
+        }
+        Serial.println();
+        json.iteratorEnd(); // required for free the used memory in iteration (node data collection)
+    }
+
+    // This is the size of stream payload received (current and max value)
+    // Max payload size is the payload size under the stream path since the stream connected
+    // and read once and will not update until stream reconnection takes place.
+    // This max value will be zero as no payload received in case of ESP8266 which
+    // BearSSL reserved Rx buffer size is less than the actual stream payload.
+    Serial.printf("Received stream payload size: %d (Max. %d)\n\n", data.payloadLength(), data.maxPayloadLength());
+}
 
 //---------------------------------------------------------------------------------------------------------------------
 void connect_firebase()
@@ -77,6 +163,15 @@ void connect_firebase()
 
     Firebase.begin(&config, &auth);
     Firebase.reconnectWiFi(true);
+
+    if (!Firebase.RTDB.beginStream(&fbdo, PATH_TO_CHECK))
+    {
+        Serial.print("Error: ");
+        Serial.println(fbdo.errorReason().c_str());
+    }
+
+    // Callback when fbdo changes.
+    Firebase.RTDB.setStreamCallback(&fbdo, firebase_stream_cb, firebase_timeout);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -154,14 +249,38 @@ void setup()
 //---------------------------------------------------------------------------------------------------------------------
 void loop()
 {
-    static textEffect_t text_effect = PA_PRINT;
+
+    // if (P.displayAnimate())
+    // {
+    //     // Done displaying, let's check firebase.
+    //     process_firebase(text_effect);
+    //     // Nothing pending, redraw.
+    //     P.displayText(things_to_show.c_str(), PA_LEFT, 50, 50, text_effect, PA_DISSOLVE);
+    // }
+    // delay(STATE_DELAY_MS * 5);
 
     if (P.displayAnimate())
     {
-        // Done displaying, let's check firebase.
-        process_firebase(text_effect);
+        if (Firebase.isTokenExpired())
+        {
+            Firebase.refreshToken(&config);
+            Serial.println("Refresh token");
+        }
+        textEffect_t text_effect = animate ? PA_SCROLL_LEFT : PA_PRINT;
+
+        Serial.println(things_to_show);
+        Serial.println("Things");
+        Serial.println(animate);
+        Serial.println("Animate");
+
         // Nothing pending, redraw.
         P.displayText(things_to_show.c_str(), PA_LEFT, 50, 50, text_effect, PA_DISSOLVE);
+
+        // add a small delay if not animated.
+        if (!animate)
+        {
+            delay(500);
+        }
     }
     delay(STATE_DELAY_MS * 5);
 }
