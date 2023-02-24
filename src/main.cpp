@@ -154,8 +154,6 @@ void connect_firebase()
     auth.user.password = Authentication::FB_PASS;
 
     // Sign in.
-    Firebase.begin(&config, &auth);
-
     config.token_status_callback = tokenStatusCallback;
     config.max_token_generation_retry = 5;
 
