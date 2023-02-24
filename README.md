@@ -6,6 +6,9 @@ Mini display of 8 x 16 leds together with DHT11 as a simple Firebase Client to G
 Another client on an Android phone is then used to add the value to the database, indirectly controlling the display of the Led Matrix.
 
 ## Hardware
+
+![Miniblocks](https://github.com/seryafarma/MiniBlocks/blob/main/Miniblocks.jpg)
+
 - The hardware used in this project is the ESP8266 Node MCU v3 from AZ Delivery: https://www.az-delivery.de/en/products/nodemcu-lolin-v3-modul-mit-esp8266
 - This is connected to low cost DHT11 sensor.
 - This is also connected to two sets of MAX7219 from ICStation: http://www.icstation.com/icstation-max7219-light-lamp-display-matrix-module-panel-kits-p-2609.html this results in the 8 x 16 leds array.
